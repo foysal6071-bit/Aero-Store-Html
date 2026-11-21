@@ -520,10 +520,10 @@ img{-webkit-user-drag:none;user-drag:none}
   <div class="themes" id="imGroup" role="group" aria-label="Install method" hidden>
     <button class="imb" data-m="normal" aria-pressed="true">Normal<svg class="tck" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M5.6 10.4l3 3 5.8-6.2"/></svg></button>
     <button class="imb" data-m="wireless" aria-pressed="false">Wireless debugging<svg class="tck" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M5.6 10.4l3 3 5.8-6.2"/></svg></button>
-    <button class="imb" data-m="aerohub" id="imAeroBtn" aria-pressed="false" hidden>AeroHUB<svg class="tck" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M5.6 10.4l3 3 5.8-6.2"/></svg></button>
+    <button class="imb" data-m="shizuku" id="imShizBtn" aria-pressed="false" hidden>Shizuku<svg class="tck" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M5.6 10.4l3 3 5.8-6.2"/></svg></button>
   </div>
   <button class="imb" id="imPair" hidden style="margin-top:10px;width:100%">Pair Wireless debugging</button>
-  <button class="imb" id="imAeroAct" hidden style="margin-top:10px;width:100%"></button>
+  <button class="imb" id="imShizAct" hidden style="margin-top:10px;width:100%"></button>
   <div class="imo" id="imOpts" hidden>
    <button class="imr" id="optTcp" type="button" role="switch" aria-checked="false"><svg class="oi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.9 12a3.1 3.1 0 0 1 3.1-3.1h4V7H7a5 5 0 0 0 0 10h4v-1.9H7A3.1 3.1 0 0 1 3.9 12zM8 13h8v-2H8v2zm9-6h-4v1.9h4a3.1 3.1 0 0 1 0 6.2h-4V17h4a5 5 0 0 0 0-10z"/></svg><span class="imi"><b>TCP mode</b><span>Allows Aero Store to install without Wi-Fi and stops the repeated “Wireless debugging connected” notification. (Wireless debugging must have connected once since reboot)</span></span><i class="sw"></i></button>
    <button class="imr" id="optPort" type="button"><svg class="oi" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10V8h-4V4h-2v4h-4V4H8v4H4v2h4v4H4v2h4v4h2v-4h4v4h2v-4h4v-2h-4v-4h4zm-6 4h-4v-4h4v4z"/></svg><span class="imi"><b>TCP port</b><span id="optPortV">5555</span></span><span class="chev">&#8250;</span></button>
@@ -943,27 +943,27 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshIns
 refreshInstalled();
 
 /* install method (needs the updated Android wrapper) */
-const IM_NOTE={normal:'Opens the normal Android installer screen.',aerohub:'Installs and uninstalls apps silently through AeroHUB (no installer screen, no pairing code). Start the AeroHUB server, tap Allow once, and keep Aero Store switched on in AeroHUB > Apps. If AeroHUB is not ready, the normal installer is used.',wireless:'Installs without the installer screen using Wireless debugging (Android 11+). Tap Pair once and type the pairing code in the notification. Keep Wireless debugging on. With TCP mode on, repeated installs do not show the \u201cWireless debugging connected\u201d notification.'};
+const IM_NOTE={normal:'Opens the normal Android installer screen.',shizuku:'Installs and uninstalls apps silently through Shizuku (no installer screen, no pairing code). Start Shizuku, then tap Allow once. If Shizuku is not ready, the normal installer is used.',wireless:'Installs without the installer screen using Wireless debugging (Android 11+). Tap Pair once and type the pairing code in the notification. Keep Wireless debugging on. With TCP mode on, repeated installs do not show the \u201cWireless debugging connected\u201d notification.'};
 function paintOpts(){let o={};try{o=JSON.parse(AeroBridge.getWirelessOpts())}catch(e){return}
  $('#optTcp').setAttribute('aria-checked',String(!!o.tcp));$('#optLeg').setAttribute('aria-checked',String(!!o.legacy));$('#optPortV').textContent=o.port}
 window.aeroOpts=()=>{try{paintOpts()}catch(e){}};
 function markIm(){let m='normal';try{m=AeroBridge.getInstallMode()}catch(e){}
  document.querySelectorAll('.imb[data-m]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m)));
  $('#imPair').hidden=m!=='wireless';
- let ah=null;try{if(typeof AeroBridge.getAeroState==='function')ah=JSON.parse(AeroBridge.getAeroState())}catch(e){}
- $('#imAeroBtn').hidden=!ah;
- const aa=$('#imAeroAct');aa.hidden=!(ah&&m==='aerohub'&&ah.state!=='NotInstalled');
- if(!aa.hidden){aa.textContent=ah.state==='NoPermission'?'Allow in AeroHUB':ah.ready?'AeroHUB connected':ah.msg;aa.disabled=!!ah.ready}
+ let sh=null;try{if(typeof AeroBridge.getShizukuState==='function')sh=JSON.parse(AeroBridge.getShizukuState())}catch(e){}
+ $('#imShizBtn').hidden=!sh;
+ const aa=$('#imShizAct');aa.hidden=!(sh&&m==='shizuku'&&sh.state!=='NotInstalled');
+ if(!aa.hidden){aa.textContent=sh.state==='NoPermission'?'Allow in Shizuku':sh.ready?'Shizuku connected':sh.msg;aa.disabled=!!sh.ready}
  const oo=$('#imOpts');oo.hidden=!(m==='wireless'&&typeof AeroBridge.getWirelessOpts==='function');if(!oo.hidden)paintOpts();
  let p=false;try{p=AeroBridge.isPaired()}catch(e){}
  $('#imPair').textContent=p?'Pair again':'Pair Wireless debugging';
- $('#imNote').textContent=(IM_NOTE[m]||'')+(m==='aerohub'&&ah&&!ah.ready?' \u2014 '+ah.msg:'')}
-window.aeroHub=()=>{try{markIm()}catch(e){}};
+ $('#imNote').textContent=(IM_NOTE[m]||'')+(m==='shizuku'&&sh&&!sh.ready?' \u2014 '+sh.msg:'')}
+window.aeroShizuku=()=>{try{markIm()}catch(e){}};
 if(hasBridge()&&typeof AeroBridge.setInstallMode==='function'){
  ['#imLabel','#imGroup','#imNote'].forEach(q=>$(q).hidden=false);
  document.querySelectorAll('.imb[data-m]').forEach(b=>b.addEventListener('click',()=>{try{AeroBridge.setInstallMode(b.dataset.m)}catch(e){}markIm()}));
  $('#imPair').addEventListener('click',()=>{try{AeroBridge.pairWireless()}catch(e){}});
- $('#imAeroAct').addEventListener('click',()=>{try{AeroBridge.aeroAction()}catch(e){}});
+ $('#imShizAct').addEventListener('click',()=>{try{AeroBridge.shizukuAction()}catch(e){}});
  const flip=id=>$(id).getAttribute('aria-checked')!=='true';
  $('#optTcp').addEventListener('click',()=>{const on=flip('#optTcp');$('#optTcp').setAttribute('aria-checked',String(on));try{AeroBridge.setTcpMode(on)}catch(e){}setTimeout(paintOpts,200)});
  $('#optLeg').addEventListener('click',()=>{const on=flip('#optLeg');$('#optLeg').setAttribute('aria-checked',String(on));try{AeroBridge.setLegacyPairing(on)}catch(e){}setTimeout(paintOpts,200)});
